@@ -8,7 +8,15 @@ import { Card } from "@/components/ui/card"
 import CameraModal from "@/components/camera-modal"
 import GeneratingModal from "@/components/generating-modal"
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+// Add proper typing for the page props
+interface ProductPageProps {
+  params: {
+    id: string
+  }
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export default function ProductPage({ params, searchParams }: ProductPageProps) {
   const unwrappedParams = use(params)
   const productId = unwrappedParams.id
 
