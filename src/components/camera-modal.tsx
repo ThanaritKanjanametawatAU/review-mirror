@@ -708,80 +708,41 @@ export default function CameraModal({ open, onClose, onCapture, productId }: Cam
           throw new Error('RUNPOD_ENDPOINT environment variable is not set')
         }
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timed out')), 300000)
-        );
+        const response = await fetch('/api/proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(modifiedBody)
+        })
 
-        console.log('Sending request to:', RUNPOD_ENDPOINT);
-        console.log('Request body:', JSON.stringify(modifiedBody, null, 2));
-
-        try {
-          const response = await Promise.race([
-            fetch('/api/proxy', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              body: JSON.stringify(modifiedBody)
-            }),
-            timeoutPromise
-          ]) as Response;
-
-          console.log('Response status:', response.status);
-          console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
-          const contentType = response.headers.get('content-type')
-          if (!contentType?.includes('application/json')) {
-            // If response is not JSON, handle it as an error
-            const errorText = await response.text()
-            console.error('Non-JSON response received:', {
-              status: response.status,
-              contentType,
-              responseText: errorText
-            })
-            console.log(response)
-            throw new Error(`Server returned invalid format (${response.status}). Please try again.`)
+        // Handle streaming response
+        const reader = response.body?.getReader()
+        let result = ''
+        
+        if (reader) {
+          while (true) {
+            const {done, value} = await reader.read()
+            if (done) break
+            result += new TextDecoder().decode(value)
           }
+        }
 
-          const data = await response.json()
+        const data = JSON.parse(result)
 
-          if (!response.ok) {
-            throw new Error(data.error || `Server error: ${response.status}`)
-          }
-          
-          if (data.output?.message) {
-            const imageUrl = `data:image/jpeg;base64,${data.output.message}`
-            onCapture(imageUrl)
-            setPreviewMode(false)
-            setPreviewImage(null)
-            onClose()
-          } else {
-            throw new Error('Response missing expected image data')
-          }
-
-        } catch (error) {
-          console.error('Error processing image:', error)
-          let errorMessage = 'Failed to process image. Please try again.'
-          
-          if (error instanceof Error) {
-            errorMessage = error.message
-          }
-          
-          alert(errorMessage)
-        } finally {
-          setIsLoading(false)
+        if (data.output?.message) {
+          const imageUrl = `data:image/jpeg;base64,${data.output.message}`
+          onCapture(imageUrl)
+          setPreviewMode(false)
+          setPreviewImage(null)
+          onClose()
+        } else {
+          throw new Error('Response missing expected image data')
         }
 
       } catch (error) {
         console.error('Error processing image:', error)
-        let errorMessage = 'Failed to process image. Please try again.'
-        
-        if (error instanceof Error) {
-          errorMessage = error.message
-        }
-        
-        alert(errorMessage)
+        alert('Failed to process image. Please try again.')
       } finally {
         setIsLoading(false)
       }

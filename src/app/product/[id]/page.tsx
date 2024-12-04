@@ -22,16 +22,26 @@ export default function ProductPage({ searchParams }: { searchParams: SearchPara
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
 
   const handleImageCapture = async (imageData: string) => {
-    setIsGenerating(true)
-    
-    // Use the actual generated image data instead of placeholder
-    setGeneratedImage(imageData)
-    setIsGenerating(false)
-    
-    // Save to history with the actual image data
-    const history = JSON.parse(localStorage.getItem('tryOnHistory') || '[]')
-    history.unshift({ id: productId, imageUrl: imageData, timestamp: Date.now() })
-    localStorage.setItem('tryOnHistory', JSON.stringify(history.slice(0, 10)))
+    try {
+      setIsGenerating(true)
+      console.log('Received image data:', imageData.substring(0, 100) + '...')
+      setGeneratedImage(imageData)
+      console.log('Generated image set:', !!generatedImage)
+      
+      // Save to history with the actual image data
+      const history = JSON.parse(localStorage.getItem('tryOnHistory') || '[]')
+      history.unshift({ 
+        id: productId, 
+        imageUrl: imageData, 
+        timestamp: Date.now() 
+      })
+      localStorage.setItem('tryOnHistory', JSON.stringify(history.slice(0, 10)))
+    } catch (error) {
+      console.error('Error handling captured image:', error)
+      alert('Failed to process the image. Please try again.')
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   return (
@@ -84,7 +94,7 @@ export default function ProductPage({ searchParams }: { searchParams: SearchPara
 
       <GeneratingModal open={isGenerating} />
 
-      {generatedImage && (
+      {generatedImage && !isGenerating && (
         <div className="mt-8">
           <Card className="p-4 max-w-md mx-auto">
             <h3 className="font-semibold mb-3 text-center">Virtual Try-On Result</h3>
@@ -94,6 +104,7 @@ export default function ProductPage({ searchParams }: { searchParams: SearchPara
                 alt="Virtual Try-On"
                 fill
                 className="object-cover rounded-lg"
+                unoptimized // Add this to prevent Next.js image optimization which might break base64 images
               />
             </div>
           </Card>
