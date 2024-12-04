@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export const maxDuration = 300 // Set max duration to 300 seconds (5 minutes)
+export const maxDuration = 60 // Set max duration to 300 seconds (5 minutes)
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
