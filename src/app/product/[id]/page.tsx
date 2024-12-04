@@ -1,24 +1,21 @@
 'use client'
 
-import { useState, use } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { Camera } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import CameraModal from "@/components/camera-modal"
 import GeneratingModal from "@/components/generating-modal"
+import { useParams } from "next/navigation"
 
-// Add proper typing for the page props
-interface ProductPageProps {
-  params: {
-    id: string
-  }
-  searchParams: { [key: string]: string | string[] | undefined }
+interface SearchParams {
+  [key: string]: string | string[] | undefined
 }
 
-export default function ProductPage({ params, searchParams }: ProductPageProps) {
-  const unwrappedParams = use(params)
-  const productId = unwrappedParams.id
+export default function ProductPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = useParams()
+  const productId = params?.id as string
 
   const [showCamera, setShowCamera] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -27,16 +24,13 @@ export default function ProductPage({ params, searchParams }: ProductPageProps) 
   const handleImageCapture = async (imageData: string) => {
     setIsGenerating(true)
     
-    // Simulating AI processing time
-    await new Promise(resolve => setTimeout(resolve, 5000))
-    
-    const generatedImageUrl = "/placeholder.svg?height=600&width=400"
-    setGeneratedImage(generatedImageUrl)
+    // Use the actual generated image data instead of placeholder
+    setGeneratedImage(imageData)
     setIsGenerating(false)
     
-    // Save to history
+    // Save to history with the actual image data
     const history = JSON.parse(localStorage.getItem('tryOnHistory') || '[]')
-    history.unshift({ id: productId, imageUrl: generatedImageUrl, timestamp: Date.now() })
+    history.unshift({ id: productId, imageUrl: imageData, timestamp: Date.now() })
     localStorage.setItem('tryOnHistory', JSON.stringify(history.slice(0, 10)))
   }
 
@@ -46,7 +40,7 @@ export default function ProductPage({ params, searchParams }: ProductPageProps) 
         <div className="space-y-4">
           <div className="aspect-square relative">
             <Image
-              src="/placeholder.svg?height=600&width=600"
+              src={`/assets/${productId}.png`}
               alt="Product Image"
               fill
               className="object-cover rounded-lg"
@@ -85,6 +79,7 @@ export default function ProductPage({ params, searchParams }: ProductPageProps) 
         open={showCamera} 
         onClose={() => setShowCamera(false)}
         onCapture={handleImageCapture}
+        productId={productId}
       />
 
       <GeneratingModal open={isGenerating} />

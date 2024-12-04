@@ -1,50 +1,41 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
+import Image from 'next/image'
+import Link from 'next/link'
 
-const products = [
-  {
-    id: 1,
-    name: "Classic White T-Shirt",
-    price: 29.99,
-    image: "/placeholder.svg?height=400&width=400",
-  },
-  {
-    id: 2,
-    name: "Striped Polo Shirt",
-    price: 39.99,
-    image: "/placeholder.svg?height=400&width=400",
-  },
-  {
-    id: 3,
-    name: "Denim Jacket",
-    price: 89.99,
-    image: "/placeholder.svg?height=400&width=400",
-  },
-  // Add more products as needed
-]
+interface Product {
+  id: number
+  name: string
+  imagePath: string
+}
 
-export default function ProductGrid() {
+interface ProductGridProps {
+  products: Product[]
+}
+
+export default function ProductGrid({ products }: ProductGridProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {products.map((product) => (
-        <Link key={product.id} href={`/product/${product.id}`}>
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-4">
-              <div className="aspect-square relative mb-3">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover rounded-lg"
-                />
-              </div>
-              <h2 className="font-semibold mb-2">{product.name}</h2>
-              <p className="text-primary">${product.price}</p>
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {products.map((product) => {
+        console.log('Image path:', product.imagePath);
+        return (
+          <Link
+            key={product.id}
+            href={`/product/${product.id}`}
+            className="group"
+          >
+            <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-100">
+              <Image
+                src={product.imagePath}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority={product.id <= 4}
+                className="object-cover transition-transform group-hover:scale-105"
+              />
+            </div>
+            <h3 className="mt-4 text-lg font-medium">{product.name}</h3>
+          </Link>
+        )
+      })}
     </div>
   )
 }
